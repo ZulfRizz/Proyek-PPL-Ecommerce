@@ -1,5 +1,7 @@
+
 import AppTemplate from "@/components/templates/app-template";
 import CustomerReview from "@/components/layouts/review";
+import Main from "@/components/layouts/main-menu";
 import { Link } from "@inertiajs/react";
 
 interface Category {
@@ -8,30 +10,49 @@ interface Category {
   slug: string;
 }
 
-interface MenuProps {
-  categories: Category[];
+interface Produk {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  image_url: string;
 }
 
-// const Menu = ({ categories }: MenuProps) => {
-export default function Menu({ categories }: MenuProps) {
-  return (
-    // console.log("categories:", categories);
+interface MenuProps {
+  categories: Category[];
+  produk: Produk[];
+}
 
-    <AppTemplate className="bg-[#FFFFFF]">
-      <div className="mx-16 mt-4">
-        <form>
-          <input type="text" placeholder="Search For Menu.." className="w-full rounded-full p-3 border" />
+export default function Menu({ categories, produk }: MenuProps) {
+  return (
+    <AppTemplate className="bg-white">
+      <div className="mx-6 mt-4 md:mx-16">
+        <form onSubmit={(e) => e.preventDefault()}>
+          <input
+            type="text"
+            placeholder="Cari menu..."
+            className="w-full rounded-full border p-3"
+          />
         </form>
       </div>
 
-      {/* Kategori dinamis database */}
-      <nav aria-label="products navigation display">
-        <ul className="flex justify-around p-3 mt-5 gap-3 bg-[#F3F3F3] text-2xl font-bold">
+      <nav aria-label="Kategori produk">
+        <ul className="mt-5 flex flex-wrap justify-center gap-3 bg-[#F3F3F3] p-4">
+          <li>
+            <Link
+              href="/menu"
+              aria-current="page"
+              className="rounded-full bg-black px-5 py-2 font-bold text-white"
+            >
+              Semua Produk
+            </Link>
+          </li>
+
           {categories.map((cat) => (
             <li key={cat.id}>
               <Link
                 href={`/menu/${cat.slug}`}
-                className="text-black hover:bg-black hover:text-white px-5 py-1 rounded-full transition"
+                className="rounded-full px-5 py-2 font-bold text-black transition hover:bg-black hover:text-white"
               >
                 {cat.name}
               </Link>
@@ -40,7 +61,7 @@ export default function Menu({ categories }: MenuProps) {
         </ul>
       </nav>
 
-      {/* jumbotron or others */}
+      <Main kategori="Semua Produk" produk={produk} />
 
       <CustomerReview />
     </AppTemplate>
