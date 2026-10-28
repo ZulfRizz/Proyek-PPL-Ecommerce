@@ -59,7 +59,7 @@ const Homepage = ({ items }: HomepageProps) => {
         </ul>
       </nav>
       <div id="hero-section" className="mx-16">
-        <div id="nav" className="mt-10 flex items-center justify-between">
+        <div id="nav" className="mt-10 flex items-center justify-between text-black">
           <h1 className="text-3xl font-bold">Up to -40%🎊RB Store exclusive deals</h1>
           <div className="flex items-center">
             <Link href="#" className="px-13">Gorengan</Link>

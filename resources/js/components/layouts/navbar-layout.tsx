@@ -65,7 +65,7 @@ export default function NavbarLayout({ className = "", user: initialUser = null 
             </Link>
 
             <Link
-              href="/Pesanan"
+              href="/pesanan-saya"
               className={`flex items-center rounded-full px-6 py-1 font-medium transition-colors duration-200 ${
                 activePage.startsWith("/pesanan")
                   ? "bg-[#028643] text-white"

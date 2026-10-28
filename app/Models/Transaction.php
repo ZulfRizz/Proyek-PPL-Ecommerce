@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Transaction extends Model
-{
+class Transaction extends Model {
     use HasFactory;
 
     protected $fillable = [
@@ -18,13 +17,18 @@ class Transaction extends Model
         'note',
         'payment_method',
         'status',
+        'midtrans_order_id',
+        'snap_token',
+        'payment_type',
+        'paid_at'
     ];
+
+    protected $casts = ['paid_at' => 'datetime'];
 
     /**
      * User / Client yang melakukan transaksi
      */
-    public function user(): BelongsTo
-    {
+    public function user(): BelongsTo {
         return $this->belongsTo(
             User::class,
             'client_id',
@@ -39,8 +43,7 @@ class Transaction extends Model
      *      ↓
      * transaction_details
      */
-    public function details(): HasMany
-    {
+    public function details(): HasMany {
         return $this->hasMany(
             TransactionDetail::class,
             'transaction_id',
@@ -54,18 +57,17 @@ class Transaction extends Model
      * Relasi ini tetap dipertahankan
      * untuk kebutuhan lain.
      */
-    public function items(): BelongsToMany
-    {
+    public function items(): BelongsToMany {
         return $this->belongsToMany(
             Item::class,
             'transaction_details',
             'transaction_id',
             'item_id'
         )
-        ->withPivot(
-            'quantity',
-            'price_at_time'
-        )
-        ->withTimestamps();
+            ->withPivot(
+                'quantity',
+                'price_at_time'
+            )
+            ->withTimestamps();
     }
 }
