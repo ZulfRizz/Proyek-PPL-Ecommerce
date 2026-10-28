@@ -65,15 +65,8 @@ Route::get('/Delivery', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/menu', [
-    CategoryController::class,
-    'index'
-]);
-
-Route::get('/menu/{slug}', [
-    CategoryController::class,
-    'show'
-]);
+Route::get('/menu', [CategoryController::class, 'index']);
+Route::get('/menu/{slug}', [CategoryController::class, 'show']);
 
 
 /*

@@ -2,7 +2,8 @@ import Jumbotron from "@/components/layouts/jumbotron";
 import Main from "@/components/layouts/main";
 import CustomerReview from "@/components/layouts/review";
 import AppTemplate from "@/components/templates/app-template";
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
+import { FormEvent, useState } from "react";
 
 export interface Item {
   id: number;
@@ -26,15 +27,32 @@ interface HomepageProps {
 }
 
 const Homepage = ({ items }: HomepageProps) => {
+  const [keyword, setKeyword] = useState("");
+
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    router.get("/menu", { search: keyword.trim() });
+  }
   return (
     <AppTemplate className="bg-[#FFFFFF]">
       <Jumbotron />
-      <form className="mx-16 mt-4">
-        <input
-          type="text"
-          placeholder="Search For Menu.."
-          className="w-full rounded-full p-3 border"
-        />
+      <form onSubmit={handleSearch} className="mx-16 mt-4">
+        <div className="flex overflow-hidden rounded-full border border-gray-400 bg-white">
+          <input
+            type="search"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            placeholder="Cari nama kue atau produk..."
+            className="min-w-0 flex-1 bg-white p-3 text-gray-900 placeholder:text-gray-500 outline-none"
+          />
+          <button
+            type="submit"
+            className="bg-[#51793E] px-6 font-semibold text-white hover:bg-green-800"
+          >
+            Search
+          </button>
+        </div>
       </form>
       <nav aria-label="products navigation display">
         <ul className="flex justify-around p-3 mt-5 gap-3 bg-[#F3F3F3] text-2xl font-bold">
