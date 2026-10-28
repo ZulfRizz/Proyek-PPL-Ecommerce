@@ -49,7 +49,7 @@ class CartController extends Controller
                     'quantity' => $quantity,
                     'unit' => $item->unit,
                     'discount' => (float) $item->discount,
-                    'total' => $itemTotal,
+                    'total' => (int) round($itemTotal),
                     'discounted_total' =>
                         $itemTotal - $itemDiscount,
                 ];

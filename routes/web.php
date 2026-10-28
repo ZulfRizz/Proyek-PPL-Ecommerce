@@ -12,6 +12,9 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ProfileControllerClient;
+use App\Http\Controllers\Client\PaymentController;
+use App\Http\Controllers\MidtransNotificationController;
+use App\Services\MidtransService;
 use App\Models\Item;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
@@ -80,7 +83,14 @@ Route::get('/menu/{slug}', [
 */
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/pesanan-saya', function () {
+    Route::get('/pesanan-saya', function (MidtransService $midtrans) {
+        Transaction::where('client_id', Auth::id())
+            ->where('status', 'pending')
+            ->whereIn('payment_method', ['bank', 'e-wallet'])
+            ->whereNotNull('midtrans_order_id')
+            ->get()
+            ->each(fn(Transaction $transaction) => $midtrans->refreshStatus($transaction));
+
         $transactions = Transaction::with(['details.item'])
             ->where('client_id', Auth::id())
             ->latest()
@@ -92,6 +102,18 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('pesanan.saya');
 });
+
+/*
+|--------------------------------------------------------------------------
+| WEBHOOK MIDTRANS (tanpa auth, dipanggil server Midtrans)
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/midtrans/notification', [
+    MidtransNotificationController::class,
+    'handle',
+]);
+
 
 /*
 |--------------------------------------------------------------------------
@@ -182,13 +204,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
             | URL: /client/orders/{transaction}
             | File: resources/js/pages/clients/OrderConfirmation.tsx
             */
+            Route::post('/orders/{transaction}/cancel', [PaymentController::class, 'cancel'])
+                ->name('orders.cancel');
 
-            Route::get('/orders/{transaction}', function ($transaction) {
-                $order = Transaction::where('client_id', Auth::id())
-                    ->findOrFail($transaction);
+            Route::post('/orders/{transaction}/pay', [PaymentController::class, 'token']);
+
+            Route::get('/orders/{transaction}', function (
+                Transaction $transaction,
+                MidtransService $midtrans,
+            ) {
+                abort_unless($transaction->client_id === Auth::id(), 403);
+
+                $transaction = $midtrans->refreshStatus($transaction);
 
                 return Inertia::render('clients/OrderConfirmation', [
-                    'transactionId' => (int) $order->id,
+                    'transactionId' => $transaction->id,
+                    'status'        => $transaction->status,
+                    'paymentMethod' => $transaction->payment_method,
+                    'total'         => $transaction->total,
                 ]);
             })->name('orders.show');
         });

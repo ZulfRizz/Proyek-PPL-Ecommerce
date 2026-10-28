@@ -68,7 +68,7 @@ class UserFactory extends Factory
     public function edho(): static {
         return $this->state(fn (array $attributes) => [
             'username' => "superadmin",
-            'email' => 'superadmin@gmail.com',
+            'email' => 'superadmin@gmail.com',  
             'password' => Hash::make('admin123'),
             // 'role' => 'ADMIN',
             'avatar' => null,

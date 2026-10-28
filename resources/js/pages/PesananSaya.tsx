@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link, router } from "@inertiajs/react";
 
 import {
     ShoppingCart,
@@ -8,6 +9,8 @@ import {
     Truck,
     CheckCircle,
     DollarSign,
+    CreditCard,
+    XCircle,
 } from "lucide-react";
 
 /* =========================================================
@@ -45,6 +48,7 @@ interface Transaction {
 
 interface UserData {
     name?: string;
+    username?: string;
 }
 
 interface PesananSayaProps {
@@ -67,12 +71,14 @@ export default function PesananSaya({
 
     const [selectedOrder, setSelectedOrder] =
         useState<Transaction | null>(null);
+    const [cancellingOrderId, setCancellingOrderId] =
+        useState<number | null>(null);
 
     /* =====================================================
        USER NAME
     ===================================================== */
 
-    const userName = user?.name ?? "Pengguna";
+    const userName = user?.name?.trim() || user?.username?.trim() || "Pengguna";
 
     /* =====================================================
        FORMAT RUPIAH
@@ -111,7 +117,16 @@ export default function PesananSaya({
         switch (status) {
 
             case "pending":
-                return "Pending";
+                return "Menunggu Pembayaran";
+
+            case "paid":
+                return "Lunas";
+
+            case "failed":
+                return "Pembayaran Gagal";
+
+            case "canceled":
+                return "Dibatalkan";
 
             case "dikemas":
                 return "Dikemas";
@@ -159,10 +174,21 @@ export default function PesananSaya({
 
             case "diterima":
             case "selesai":
+            case "paid":
                 return (
                     <CheckCircle
                         size={22}
                         className="text-green-600"
+                    />
+                );
+
+            case "canceled":
+            case "cancelled":
+            case "failed":
+                return (
+                    <XCircle
+                        size={22}
+                        className="text-red-600"
                     />
                 );
 
@@ -174,6 +200,47 @@ export default function PesananSaya({
                     />
                 );
         }
+    };
+
+    const getStatusClass = (status: string) => {
+        if (["paid", "diterima", "selesai"].includes(status.toLowerCase())) {
+            return "text-green-600";
+        }
+
+        if (["canceled", "cancelled", "failed"].includes(status.toLowerCase())) {
+            return "text-red-600";
+        }
+
+        return "text-yellow-600";
+    };
+
+    const getPaymentMethodLabel = (method: string) => {
+        switch (method.toLowerCase()) {
+            case "bank":
+                return "Transfer Bank";
+            case "e-wallet":
+                return "E-Wallet";
+            case "cash":
+                return "Tunai (Cash)";
+            default:
+                return method;
+        }
+    };
+
+    const cancelOrder = (transaction: Transaction) => {
+        if (!window.confirm(`Batalkan pesanan #${transaction.id}?`)) {
+            return;
+        }
+
+        setCancellingOrderId(transaction.id);
+        router.post(
+            `/client/orders/${transaction.id}/cancel`,
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setCancellingOrderId(null),
+            }
+        );
     };
 
     /* =====================================================
@@ -307,7 +374,7 @@ export default function PesananSaya({
                                     selectedOrder.status
                                 )}
 
-                                <span className="ml-2 font-medium text-green-600">
+                                <span className={`ml-2 font-medium ${getStatusClass(selectedOrder.status)}`}>
                                     {getStatusText(
                                         selectedOrder.status
                                     )}
@@ -601,7 +668,7 @@ export default function PesananSaya({
                                                         transaction.status
                                                     )}
 
-                                                    <span className="ml-2 font-medium text-green-600">
+                                                    <span className={`ml-2 font-medium ${getStatusClass(transaction.status)}`}>
                                                         {getStatusText(
                                                             transaction.status
                                                         )}
@@ -675,17 +742,47 @@ export default function PesananSaya({
                                                     )}
                                                 </p>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setSelectedOrder(
-                                                            transaction
-                                                        )
-                                                    }
-                                                    className="mt-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 cursor-pointer"
-                                                >
-                                                    Lihat Detail
-                                                </button>
+                                                <p className="text-sm text-gray-500 mt-1">
+                                                    {getPaymentMethodLabel(transaction.payment_method)}
+                                                </p>
+
+                                                <div className="mt-3 flex flex-wrap justify-end gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setSelectedOrder(
+                                                                transaction
+                                                            )
+                                                        }
+                                                        className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 cursor-pointer"
+                                                    >
+                                                        Lihat Detail
+                                                    </button>
+
+                                                    {transaction.status.toLowerCase() === "pending" && (
+                                                        <>
+                                                            {transaction.payment_method.toLowerCase() !== "cash" && (
+                                                                <Link
+                                                                    href={`/client/orders/${transaction.id}`}
+                                                                    className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                                                                >
+                                                                    <CreditCard size={16} />
+                                                                    Bayar via {getPaymentMethodLabel(transaction.payment_method)}
+                                                                </Link>
+                                                            )}
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => cancelOrder(transaction)}
+                                                                disabled={cancellingOrderId === transaction.id}
+                                                                className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-lg hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                            >
+                                                                <XCircle size={16} />
+                                                                {cancellingOrderId === transaction.id ? "Membatalkan..." : "Batalkan Pesanan"}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
 
                                             </div>
 
